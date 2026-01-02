@@ -40,22 +40,28 @@
             <span class="material-symbols-outlined">tune</span>
         </div>
 
-        <div id="blurContainer" class="blur-container">
-            <div class="blur-value-display" id="blurValue">50%</div>
-            <input type="range" id="blurSlider" min="0" max="30" value="12" class="custom-slider">
-        </div>
-
-        <div class="zoom-area">
-            <div class="needle"></div>
-            <div class="zoom-pill" id="zoomPill">
-                <div class="dots-view">
-                    <div class="zoom-dot" id="dot05" onclick="applyZoom(0.5)">.5x</div>
-                    <div class="zoom-dot active" id="dot1" onclick="applyZoom(1)">1x</div>
-                    <div class="zoom-dot" id="dot2" onclick="applyZoom(2)">2x</div>
-                    <div class="zoom-dot" id="dot5" onclick="applyZoom(5)">5x</div>
+        <div class="bottom-controls-area" id="bottomControlsArea">
+            
+            <div class="new-blur-container" id="newBlurContainer">
+                <div class="blur-track">
+                    <div class="blur-fill" id="blurFill" style="width: 15%;"></div>
+                    <span class="blur-text" id="blurText">15%</span>
                 </div>
-                <div class="ruler-view" id="rulerView">
-                    <div class="ruler-track" id="rulerTrack"></div>
+                <input type="range" id="blurInput" min="0" max="50" value="15" class="invisible-slider">
+            </div>
+
+            <div class="zoom-area" id="zoomArea">
+                <div class="needle"></div>
+                <div class="zoom-pill" id="zoomPill">
+                    <div class="dots-view">
+                        <div class="zoom-dot" id="dot05" onclick="applyZoom(0.5)">.5x</div>
+                        <div class="zoom-dot active" id="dot1" onclick="applyZoom(1)">1x</div>
+                        <div class="zoom-dot" id="dot2" onclick="applyZoom(2)">2x</div>
+                        <div class="zoom-dot" id="dot5" onclick="applyZoom(5)">5x</div>
+                    </div>
+                    <div class="ruler-view" id="rulerView">
+                        <div class="ruler-track" id="rulerTrack"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -69,6 +75,7 @@
             <div class="mode-item active" onclick="setMode(1, 'photo')">Photos</div>
             <div class="mode-item" onclick="setMode(2, 'portrait')">Portrait</div>
             <div class="mode-item" onclick="setMode(3, 'short')">Short Video</div>
+            <div class="mode-item" onclick="setMode(4, 'slowmo')">Slowmo</div>
         </div>
     </div>
     <div class="shutter-row">
@@ -91,4 +98,4 @@
 
 <script src="script.js"></script>
 </body>
-                        </html>
+        </html>
