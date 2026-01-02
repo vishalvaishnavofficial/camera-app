@@ -31,17 +31,18 @@
         <span id="overlayIcon" class="material-symbols-outlined">photo_camera</span>
         <div id="overlayText">Photo</div>
     </div>
+    
     <div class="viewport" id="viewport">
         <video id="videoFeed" autoplay playsinline muted></video>
         <canvas id="portraitCanvas"></canvas>
 
-        <div id="portraitSettingsBtn" class="portrait-controls-btn" onclick="toggleBlurSlider()">
+        <div id="portraitSettingsBtn" class="portrait-settings-btn" onclick="toggleBlurSlider()">
             <span class="material-symbols-outlined">tune</span>
         </div>
 
-        <div id="blurSliderContainer" class="blur-slider-container">
-            <div class="blur-value-display" id="blurValueDisplay">0%</div>
-            <input type="range" id="blurSlider" min="0" max="25" value="12" step="1">
+        <div id="blurContainer" class="blur-container">
+            <div class="blur-value-display" id="blurValue">50%</div>
+            <input type="range" id="blurSlider" min="0" max="30" value="12" class="custom-slider">
         </div>
 
         <div class="zoom-area">
@@ -90,4 +91,4 @@
 
 <script src="script.js"></script>
 </body>
-  </html>
+                        </html>
