@@ -10,15 +10,17 @@ const modeOverlay = document.getElementById('modeOverlay');
 
 // New Portrait Controls
 const portraitSettingsBtn = document.getElementById('portraitSettingsBtn');
-const blurContainer = document.getElementById('blurContainer');
-const blurSlider = document.getElementById('blurSlider');
-const blurValueDisplay = document.getElementById('blurValue');
+const bottomControlsArea = document.getElementById('bottomControlsArea');
+const blurInput = document.getElementById('blurInput');
+const blurFill = document.getElementById('blurFill');
+const blurText = document.getElementById('blurText');
 
 let currentFacing = "environment", maxZoom = 10, currentMode = "photo";
 let mediaRecorder, chunks = [], lastMediaURL = null, lastMediaType = null;
 let recordingSeconds = 0, timerInterval;
 let flashMode = 'off';
-let blurAmount = 12; // Default blur
+let blurPercentage = 15; // Default blur percentage
+let isProcessingPortrait = false; // Flag to prevent lag
 
 // Initialize Portrait Blur Engine
 const selfieSegmentation = new SelfieSegmentation({
@@ -29,6 +31,9 @@ selfieSegmentation.setOptions({ modelSelection: 1 });
 selfieSegmentation.onResults(onPortraitResults);
 
 function onPortraitResults(results) {
+    // Mark processing as complete
+    isProcessingPortrait = false;
+
     if (currentMode !== 'portrait') return;
 
     portraitCanvas.width = video.videoWidth;
@@ -37,41 +42,50 @@ function onPortraitResults(results) {
     portraitCtx.save();
     portraitCtx.clearRect(0, 0, portraitCanvas.width, portraitCanvas.height);
 
+    // 1. Draw mask
     portraitCtx.drawImage(results.segmentationMask, 0, 0, portraitCanvas.width, portraitCanvas.height);
 
+    // 2. Draw Blurred Background (Map percentage to pixel radius, e.g., 50% -> 25px)
     portraitCtx.globalCompositeOperation = 'source-out';
-    portraitCtx.filter = `blur(${blurAmount}px) brightness(0.9)`; 
+    const pixelBlur = blurPercentage / 2; 
+    portraitCtx.filter = `blur(${pixelBlur}px) brightness(0.9)`; 
     portraitCtx.drawImage(results.image, 0, 0, portraitCanvas.width, portraitCanvas.height);
 
+    // 3. Draw Sharp Person on top
     portraitCtx.globalCompositeOperation = 'destination-over';
     portraitCtx.filter = 'none';
     portraitCtx.drawImage(results.image, 0, 0, portraitCanvas.width, portraitCanvas.height);
 
     portraitCtx.restore();
-
-    requestAnimationFrame(() => {
-        if(currentMode === 'portrait') selfieSegmentation.send({image: video});
-    });
+    
+    // Request next frame process
+    requestPortraitFrame();
 }
 
-// Blur Slider Listeners
-blurSlider.addEventListener('input', (e) => {
-    blurAmount = e.target.value;
-    const percentage = Math.round((blurAmount / 30) * 100);
-    blurValueDisplay.innerText = `${percentage}%`;
-    blurContainer.classList.add('interacting');
+function requestPortraitFrame() {
+    // Only send data if we aren't already processing a frame and we are in portrait mode
+    if (!isProcessingPortrait && currentMode === 'portrait' && video.readyState === 4) {
+        isProcessingPortrait = true;
+        selfieSegmentation.send({image: video});
+    } else if (currentMode === 'portrait') {
+        // If busy, check again on next animation frame
+        requestAnimationFrame(requestPortraitFrame);
+    }
+}
+
+
+// Blur Slider Listener for Custom UI
+blurInput.addEventListener('input', (e) => {
+    blurPercentage = e.target.value;
+    // Update the width of the fill bar and the text
+    blurFill.style.width = `${blurPercentage}%`;
+    blurText.innerText = `${blurPercentage}%`;
 });
 
-blurSlider.addEventListener('change', () => {
-    blurContainer.classList.remove('interacting');
-});
-
-blurSlider.addEventListener('mouseup', () => blurContainer.classList.remove('interacting'));
-blurSlider.addEventListener('touchend', () => blurContainer.classList.remove('interacting'));
-
+// Toggle between Zoom bar and Blur slider
 function toggleBlurSlider() {
-    const isVisible = blurContainer.style.display === 'flex';
-    blurContainer.style.display = isVisible ? 'none' : 'flex';
+    const isActive = bottomControlsArea.classList.toggle('blur-active');
+    portraitSettingsBtn.classList.toggle('active', isActive);
 }
 
 async function startCamera(face) {
@@ -80,7 +94,7 @@ async function startCamera(face) {
             video.srcObject.getTracks().forEach(t => t.stop());
         }
         const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: face },
+            video: { facingMode: face, frameRate: { ideal: 30 } }, // Try to request 30fps
             audio: true
         });
         video.srcObject = stream;
@@ -89,6 +103,8 @@ async function startCamera(face) {
             const caps = track.getCapabilities();
             maxZoom = caps.zoom ? caps.zoom.max : 10;
             buildRuler();
+            // Kick off portrait processing if needed
+            if(currentMode === 'portrait') requestPortraitFrame();
         };
     } catch (err) { console.error(err); }
 }
@@ -115,8 +131,9 @@ function toggleCamera() {
 
 function setMode(idx, mode) {
     if (currentMode === mode) return;
-    const icons = { 'photo': 'photo_camera', 'video': 'videocam', 'short': 'bolt', 'portrait': 'person' };
-    const labels = { 'photo': 'Photo', 'video': 'Video', 'short': 'Short Video', 'portrait': 'Portrait' };
+    // Updated icons and labels for new Slowmo mode
+    const icons = { 'photo': 'photo_camera', 'video': 'videocam', 'short': 'bolt', 'portrait': 'person', 'slowmo': 'slow_motion_video' };
+    const labels = { 'photo': 'Photo', 'video': 'Video', 'short': 'Short Video', 'portrait': 'Portrait', 'slowmo': 'Slow Motion' };
 
     document.getElementById('overlayIcon').innerText = icons[mode];
     document.getElementById('overlayText').innerText = labels[mode];
@@ -125,22 +142,26 @@ function setMode(idx, mode) {
 
     currentMode = mode;
 
-    // Toggle Portrait specific UI
+    // Reset blur slider state when changing modes
+    bottomControlsArea.classList.remove('blur-active');
+    portraitSettingsBtn.classList.remove('active');
+
+    // Toggle Portrait specific UI and processing
     if(mode === 'portrait') {
         portraitCanvas.style.display = 'block';
         portraitSettingsBtn.style.display = 'flex';
         video.style.opacity = '0';
-        selfieSegmentation.send({image: video});
+        requestPortraitFrame(); // Start processing loop
     } else {
         portraitCanvas.style.display = 'none';
         portraitSettingsBtn.style.display = 'none';
-        blurContainer.style.display = 'none';
         video.style.opacity = '1';
+        isProcessingPortrait = false; // Stop processing loop
     }
 
     document.querySelectorAll('.mode-item').forEach((m, i) => m.classList.toggle('active', i === idx));
     
-    // Centers the active tab (Index 1 "Photos" is centered when idx=1)
+    // Updated shifting logic for 5 tabs (Index 1 "Photos" is center)
     modeTrack.style.transform = `translate(calc(-50% + ${(1 - idx) * 110}px), -50%)`;
 }
 
@@ -175,7 +196,9 @@ function captureFrame() {
 async function startRecording() {
     if (flashMode === 'auto') await setFlash(true);
     chunks = [];
+    // Use canvas stream for portrait, raw video stream for others (including slowmo)
     const stream = currentMode === 'portrait' ? portraitCanvas.captureStream() : video.srcObject;
+    
     mediaRecorder = new MediaRecorder(stream);
     mediaRecorder.ondataavailable = e => chunks.push(e.data);
     mediaRecorder.onstop = async () => {
@@ -193,6 +216,7 @@ async function startRecording() {
     timerInterval = setInterval(() => {
         recordingSeconds++;
         updateTimerUI();
+        // Auto-stop short video after 30s
         if (currentMode === 'short' && recordingSeconds >= 30) stopRecording();
     }, 1000);
 }
@@ -247,7 +271,29 @@ shutter.onclick = () => {
 function openViewer() {
     if (!lastMediaURL) return;
     const vBody = document.getElementById('vBody');
-    vBody.innerHTML = lastMediaType === 'image' ? `<img src="${lastMediaURL}">` : `<video src="${lastMediaURL}" controls autoplay style="width:100%"></video>`;
+    vBody.innerHTML = ''; // Clear previous content
+
+    if (lastMediaType === 'image') {
+        vBody.innerHTML = `<img src="${lastMediaURL}">`;
+    } else {
+        const videoEl = document.createElement('video');
+        videoEl.src = lastMediaURL;
+        videoEl.controls = true;
+        videoEl.autoplay = true;
+        videoEl.style.width = '100%';
+        
+        // Slowmo Playback Logic: 2 seconds normal, then slow
+        if (currentMode === 'slowmo') {
+            videoEl.addEventListener('timeupdate', () => {
+                if (videoEl.currentTime > 2 && videoEl.playbackRate !== 0.4) {
+                    videoEl.playbackRate = 0.4; // "Soft slow" speed
+                } else if (videoEl.currentTime <= 2 && videoEl.playbackRate !== 1.0) {
+                    videoEl.playbackRate = 1.0;
+                }
+            });
+        }
+        vBody.appendChild(videoEl);
+    }
     document.getElementById('viewer').style.display = 'flex';
 }
 function closeViewer() { document.getElementById('viewer').style.display = 'none'; }
