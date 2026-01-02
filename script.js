@@ -7,16 +7,18 @@ const modeTrack = document.getElementById('modeTrack');
 const shutter = document.getElementById('shutter');
 const timerDisplay = document.getElementById('timer');
 const modeOverlay = document.getElementById('modeOverlay');
-const blurSlider = document.getElementById('blurSlider');
-const blurSliderContainer = document.getElementById('blurSliderContainer');
+
+// New Portrait Controls
 const portraitSettingsBtn = document.getElementById('portraitSettingsBtn');
-const blurValueDisplay = document.getElementById('blurValueDisplay');
+const blurContainer = document.getElementById('blurContainer');
+const blurSlider = document.getElementById('blurSlider');
+const blurValueDisplay = document.getElementById('blurValue');
 
 let currentFacing = "environment", maxZoom = 10, currentMode = "photo";
 let mediaRecorder, chunks = [], lastMediaURL = null, lastMediaType = null;
 let recordingSeconds = 0, timerInterval;
 let flashMode = 'off';
-let currentBlur = 12;
+let blurAmount = 12; // Default blur
 
 // Initialize Portrait Blur Engine
 const selfieSegmentation = new SelfieSegmentation({
@@ -34,10 +36,11 @@ function onPortraitResults(results) {
 
     portraitCtx.save();
     portraitCtx.clearRect(0, 0, portraitCanvas.width, portraitCanvas.height);
+
     portraitCtx.drawImage(results.segmentationMask, 0, 0, portraitCanvas.width, portraitCanvas.height);
 
     portraitCtx.globalCompositeOperation = 'source-out';
-    portraitCtx.filter = `blur(${currentBlur}px) brightness(0.9)`;
+    portraitCtx.filter = `blur(${blurAmount}px) brightness(0.9)`; 
     portraitCtx.drawImage(results.image, 0, 0, portraitCanvas.width, portraitCanvas.height);
 
     portraitCtx.globalCompositeOperation = 'destination-over';
@@ -51,21 +54,24 @@ function onPortraitResults(results) {
     });
 }
 
-// Blur Slider Interaction
-blurSlider.oninput = () => {
-    currentBlur = blurSlider.value;
-    const percent = Math.round((currentBlur / 25) * 100);
-    blurValueDisplay.innerText = `${percent}%`;
-    blurValueDisplay.style.opacity = '1';
-};
+// Blur Slider Listeners
+blurSlider.addEventListener('input', (e) => {
+    blurAmount = e.target.value;
+    const percentage = Math.round((blurAmount / 30) * 100);
+    blurValueDisplay.innerText = `${percentage}%`;
+    blurContainer.classList.add('interacting');
+});
 
-blurSlider.onchange = () => {
-    blurValueDisplay.style.opacity = '0';
-};
+blurSlider.addEventListener('change', () => {
+    blurContainer.classList.remove('interacting');
+});
+
+blurSlider.addEventListener('mouseup', () => blurContainer.classList.remove('interacting'));
+blurSlider.addEventListener('touchend', () => blurContainer.classList.remove('interacting'));
 
 function toggleBlurSlider() {
-    const isVisible = blurSliderContainer.style.display === 'flex';
-    blurSliderContainer.style.display = isVisible ? 'none' : 'flex';
+    const isVisible = blurContainer.style.display === 'flex';
+    blurContainer.style.display = isVisible ? 'none' : 'flex';
 }
 
 async function startCamera(face) {
@@ -119,26 +125,23 @@ function setMode(idx, mode) {
 
     currentMode = mode;
 
+    // Toggle Portrait specific UI
     if(mode === 'portrait') {
         portraitCanvas.style.display = 'block';
-        video.style.opacity = '0';
         portraitSettingsBtn.style.display = 'flex';
+        video.style.opacity = '0';
         selfieSegmentation.send({image: video});
     } else {
         portraitCanvas.style.display = 'none';
-        video.style.opacity = '1';
         portraitSettingsBtn.style.display = 'none';
-        blurSliderContainer.style.display = 'none';
+        blurContainer.style.display = 'none';
+        video.style.opacity = '1';
     }
 
     document.querySelectorAll('.mode-item').forEach((m, i) => m.classList.toggle('active', i === idx));
     
-    // Shift track to keep the selected item center-aligned with the shutter button
-    const items = document.querySelectorAll('.mode-item');
-    let offset = 0;
-    for(let i=0; i<idx; i++) { offset += items[i].offsetWidth; }
-    offset += items[idx].offsetWidth / 2;
-    modeTrack.style.transform = `translate(calc(-${offset}px), -50%)`;
+    // Centers the active tab (Index 1 "Photos" is centered when idx=1)
+    modeTrack.style.transform = `translate(calc(-50% + ${(1 - idx) * 110}px), -50%)`;
 }
 
 async function takePhoto() {
@@ -266,6 +269,4 @@ function applyZoom(val) {
     });
 }
 
-// Initial mode centering
-setTimeout(() => setMode(1, 'photo'), 100);
 startCamera(currentFacing);
