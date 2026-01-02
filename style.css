@@ -3,6 +3,7 @@
 
 body { background: var(--bg); color: white; margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
+/* Top Bar */
 .top-box { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 50; }
 .top-icons { display: flex; gap: 20px; align-items: center; }
 .top-icon-btn { cursor: pointer; display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #ccc; min-width: 45px; }
@@ -20,20 +21,53 @@ body { background: var(--bg); color: white; margin: 0; font-family: 'Segoe UI', 
 #videoFeed, #portraitCanvas { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); min-width: 100%; min-height: 100%; object-fit: cover; transition: transform 0.1s ease-out; pointer-events: none; }
 #portraitCanvas { display: none; z-index: 5; }
 
-/* Portrait Slider UI */
-.portrait-controls-btn { position: absolute; bottom: 85px; right: 20px; z-index: 60; background: rgba(0,0,0,0.5); width: 40px; height: 40px; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); }
-.portrait-controls-btn span { font-size: 20px; }
+/* Portrait Settings & Slider */
+.portrait-settings-btn {
+    position: absolute; bottom: 20px; right: 20px; z-index: 60;
+    background: rgba(0,0,0,0.5); width: 45px; height: 45px; border-radius: 50%;
+    display: none; align-items: center; justify-content: center; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.2);
+}
 
-.blur-slider-container { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); width: 60%; z-index: 60; display: none; flex-direction: column; align-items: center; }
-.blur-value-display { font-size: 12px; font-weight: bold; color: var(--accent); margin-bottom: 8px; opacity: 0; transition: opacity 0.2s; }
+.blur-container {
+    position: absolute; bottom: 80px; width: 80%; z-index: 60;
+    display: none; flex-direction: column; align-items: center;
+}
 
-#blurSlider { -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer; }
-#blurSlider::-webkit-slider-runnable-track { background: rgba(255,255,255,0.3); height: 2px; border-radius: 2px; transition: height 0.2s, background 0.2s; }
-#blurSlider:active::-webkit-slider-runnable-track { height: 6px; background: rgba(255,255,255,0.5); }
-#blurSlider::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: var(--accent); margin-top: -7px; transition: transform 0.2s; }
-#blurSlider:active::-webkit-slider-thumb { transform: scale(1.2); margin-top: -5px; }
+.blur-value-display {
+    font-size: 12px; font-weight: bold; color: var(--accent);
+    margin-bottom: 10px; opacity: 0; transition: opacity 0.2s;
+}
 
-/* Zoom UI */
+.custom-slider {
+    -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer;
+}
+
+/* The horizontal slider track */
+.custom-slider::-webkit-slider-runnable-track {
+    width: 100%; height: 2px; background: rgba(255,255,255,0.3);
+    border-radius: 2px; transition: height 0.2s, background 0.2s;
+}
+
+/* Thicken track when active */
+.custom-slider:active::-webkit-slider-runnable-track {
+    height: 6px; background: rgba(255,255,255,0.5);
+}
+
+.custom-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+    background: var(--accent); margin-top: -7px; /* Centers thumb on thin track */
+    transition: transform 0.2s;
+}
+
+.custom-slider:active::-webkit-slider-thumb {
+    transform: scale(1.2); margin-top: -5px; /* Adjust center for thick track */
+}
+
+/* Show value when interacting */
+.blur-container.interacting .blur-value-display { opacity: 1; }
+
+/* Zoom Slider */
 .zoom-area { z-index: 20; margin-bottom: 25px; width: 100%; display: flex; justify-content: center; position: relative; }
 .needle { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 2px; height: 60px; background: var(--accent); z-index: 30; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
 .zoom-pill { display: flex; background: rgba(0,0,0,0.85); padding: 6px; border-radius: 40px; transition: all 0.3s; min-width: 160px; position: relative; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
@@ -53,11 +87,11 @@ body { background: var(--bg); color: white; margin: 0; font-family: 'Segoe UI', 
 .zoom-pill.expanded .ruler-view { opacity: 1; pointer-events: auto; }
 .zoom-pill.expanded + .needle { opacity: 1; }
 
-/* Mode Switcher Logic */
+/* Controls */
 .controls { padding: 10px 0 40px; display: flex; flex-direction: column; align-items: center; z-index: 50; }
-.mode-container { width: 100%; overflow: hidden; position: relative; height: 50px; display: flex; justify-content: center; }
-.mode-track { display: flex; position: absolute; left: 50%; top: 50%; transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1); will-change: transform; }
-.mode-item { padding: 8px 20px; color: #888; font-size: 14px; white-space: nowrap; cursor: pointer; text-align: center; }
+.mode-container { width: 100%; overflow: hidden; position: relative; height: 50px; }
+.mode-track { display: flex; position: absolute; left: 50%; top: 50%; transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1); transform: translate(-50%, -50%); }
+.mode-item { padding: 8px 20px; color: #888; font-size: 14px; white-space: nowrap; cursor: pointer; }
 .mode-item.active { color: #000; background: var(--accent); border-radius: 20px; font-weight: bold; }
 
 .shutter-row { display: flex; width: 100%; justify-content: space-around; align-items: center; max-width: 400px; margin-top: 15px; }
