@@ -21,54 +21,43 @@ body { background: var(--bg); color: white; margin: 0; font-family: 'Segoe UI', 
 #videoFeed, #portraitCanvas { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); min-width: 100%; min-height: 100%; object-fit: cover; transition: transform 0.1s ease-out; pointer-events: none; }
 #portraitCanvas { display: none; z-index: 5; }
 
-/* Portrait Settings & Slider */
+/* Portrait Settings Button */
 .portrait-settings-btn {
     position: absolute; bottom: 20px; right: 20px; z-index: 60;
     background: rgba(0,0,0,0.5); width: 45px; height: 45px; border-radius: 50%;
     display: none; align-items: center; justify-content: center; cursor: pointer;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.2); transition: background 0.3s;
+}
+.portrait-settings-btn.active { background: var(--accent); color: black; }
+
+/* Bottom Controls Area (Holds either Zoom or Blur) */
+.bottom-controls-area {
+    z-index: 20; margin-bottom: 25px; width: 100%; display: flex; justify-content: center; position: relative; height: 60px; align-items: center;
 }
 
-.blur-container {
-    position: absolute; bottom: 80px; width: 80%; z-index: 60;
-    display: none; flex-direction: column; align-items: center;
+/* New Custom Blur Slider UI */
+.new-blur-container {
+    width: 80%; max-width: 300px; height: 50px; position: relative; display: none; align-items: center;
 }
-
-.blur-value-display {
-    font-size: 12px; font-weight: bold; color: var(--accent);
-    margin-bottom: 10px; opacity: 0; transition: opacity 0.2s;
+.blur-track {
+    width: 100%; height: 100%; background: #000; border-radius: 30px; overflow: hidden; position: relative; border: 2px solid #000;
 }
-
-.custom-slider {
-    -webkit-appearance: none; width: 100%; background: transparent; cursor: pointer;
+.blur-fill {
+    height: 100%; background: var(--accent); border-radius: 30px 0 0 30px; transition: width 0.1s linear;
 }
-
-/* The horizontal slider track */
-.custom-slider::-webkit-slider-runnable-track {
-    width: 100%; height: 2px; background: rgba(255,255,255,0.3);
-    border-radius: 2px; transition: height 0.2s, background 0.2s;
+.blur-text {
+    position: absolute; top: 50%; left: 20px; transform: translateY(-50%); font-weight: bold; color: #000; font-size: 18px; pointer-events: none; mix-blend-mode: difference; color: white;
 }
-
-/* Thicken track when active */
-.custom-slider:active::-webkit-slider-runnable-track {
-    height: 6px; background: rgba(255,255,255,0.5);
+.invisible-slider {
+    position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; margin: 0;
 }
-
-.custom-slider::-webkit-slider-thumb {
-    -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
-    background: var(--accent); margin-top: -7px; /* Centers thumb on thin track */
-    transition: transform 0.2s;
-}
-
-.custom-slider:active::-webkit-slider-thumb {
-    transform: scale(1.2); margin-top: -5px; /* Adjust center for thick track */
-}
-
-/* Show value when interacting */
-.blur-container.interacting .blur-value-display { opacity: 1; }
 
 /* Zoom Slider */
-.zoom-area { z-index: 20; margin-bottom: 25px; width: 100%; display: flex; justify-content: center; position: relative; }
+.zoom-area { width: 100%; display: flex; justify-content: center; position: relative; height: 100%; align-items: center; transition: opacity 0.3s; }
+/* Hide zoom area when blur is active */
+.bottom-controls-area.blur-active .zoom-area { display: none; }
+.bottom-controls-area.blur-active .new-blur-container { display: flex; }
+
 .needle { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 2px; height: 60px; background: var(--accent); z-index: 30; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
 .zoom-pill { display: flex; background: rgba(0,0,0,0.85); padding: 6px; border-radius: 40px; transition: all 0.3s; min-width: 160px; position: relative; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
 .dots-view { display: flex; gap: 8px; z-index: 25; transition: 0.3s; }
