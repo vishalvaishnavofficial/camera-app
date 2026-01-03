@@ -6,16 +6,22 @@
     <title>Camera App</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
 </head>
 <body>
 
 <div class="top-box">
     <div class="top-icons">
-        <div class="top-icon-btn"><span class="material-symbols-outlined">settings</span></div>
+        <div class="top-icon-btn">
+            <span class="material-symbols-outlined">info</span>
+            <div>About</div>
+        </div>
         <div class="top-icon-btn" onclick="toggleFlash()">
             <span id="flashIcon" class="material-symbols-outlined">flash_off</span>
             <div id="flashLabel">Off</div>
+        </div>
+        <div class="top-icon-btn" onclick="toggleGrid()">
+            <span id="gridIcon" class="material-symbols-outlined">grid_on</span>
+            <div id="gridLabel">Grid</div>
         </div>
         <div class="top-icon-btn" onclick="toggleRatio()">
             <span class="material-symbols-outlined">aspect_ratio</span>
@@ -34,22 +40,14 @@
     
     <div class="viewport" id="viewport">
         <video id="videoFeed" autoplay playsinline muted></video>
-        <canvas id="portraitCanvas"></canvas>
-
-        <div id="portraitSettingsBtn" class="portrait-settings-btn" onclick="toggleBlurSlider()">
-            <span class="material-symbols-outlined">tune</span>
+        
+        <div id="gridOverlay" class="grid-lines">
+            <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+            <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+            <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
         </div>
 
         <div class="bottom-controls-area" id="bottomControlsArea">
-            
-            <div class="new-blur-container" id="newBlurContainer">
-                <div class="blur-track">
-                    <div class="blur-fill" id="blurFill" style="width: 15%;"></div>
-                    <span class="blur-text" id="blurText">15%</span>
-                </div>
-                <input type="range" id="blurInput" min="0" max="50" value="15" class="invisible-slider">
-            </div>
-
             <div class="zoom-area" id="zoomArea">
                 <div class="needle"></div>
                 <div class="zoom-pill" id="zoomPill">
@@ -73,7 +71,7 @@
         <div class="mode-track" id="modeTrack">
             <div class="mode-item" onclick="setMode(0, 'video')">Video</div>
             <div class="mode-item active" onclick="setMode(1, 'photo')">Photos</div>
-            <div class="mode-item" onclick="setMode(2, 'portrait')">Portrait</div>
+            <div class="mode-item" onclick="setMode(2, 'hd-photo')">HD Photo</div>
             <div class="mode-item" onclick="setMode(3, 'short')">Short Video</div>
             <div class="mode-item" onclick="setMode(4, 'slowmo')">Slowmo</div>
         </div>
@@ -98,4 +96,4 @@
 
 <script src="script.js"></script>
 </body>
-        </html>
+                        </html>
