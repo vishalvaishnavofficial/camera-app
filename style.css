@@ -1,32 +1,35 @@
 :root { --accent: #f7d8ba; --bg: #000; }
+* { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+
 body { background: var(--bg); color: white; margin: 0; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-.top-box { height: 60px; display: flex; align-items: center; padding: 0 10px; z-index: 50; }
-.top-icons { display: flex; width: 100%; justify-content: space-around; }
-.top-icon-btn { display: flex; flex-direction: column; align-items: center; font-size: 10px; cursor: pointer; }
+/* Top Bar */
+.top-box { height: 60px; display: flex; align-items: center; justify-content: space-around; z-index: 50; }
+.top-icon-btn { cursor: pointer; display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #ccc; }
+.top-icon-btn span { font-size: 24px; color: white; }
 
-.viewport-container { flex: 1; position: relative; background: #000; padding: 0 10px; }
-.viewport { width: 100%; height: 100%; border-radius: 30px; overflow: hidden; position: relative; background: #111; }
-#videoFeed { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+.viewport-container { flex: 1; padding: 0 10px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.viewport { width: 100%; height: 100%; background: #111; border-radius: 30px; position: relative; overflow: hidden; transition: aspect-ratio 0.3s ease; }
 
-.grid-lines { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); pointer-events: none; display: none; }
-.grid-cell { border: 0.5px solid rgba(255,255,255,0.2); }
+/* Fix: Default zoom 1x */
+#videoFeed { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); width: 100%; height: 100%; object-fit: cover; }
 
-.bottom-controls-area { position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: center; }
-.zoom-pill { display: flex; background: rgba(0,0,0,0.6); padding: 4px; border-radius: 20px; gap: 5px; }
-.zoom-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; }
-.zoom-dot.active { background: white; color: black; font-weight: bold; }
-
-.controls { padding: 20px 0 40px; }
-.mode-container { width: 100%; height: 45px; position: relative; overflow: visible; display: flex; justify-content: center; }
-.mode-track { display: flex; position: absolute; left: 50%; transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); will-change: transform; }
-.mode-item { min-width: 90px; text-align: center; padding: 10px 0; color: #888; font-size: 14px; font-weight: 500; cursor: pointer; transition: 0.3s; }
+/* Mode Bar Alignment */
+.mode-container { width: 100%; overflow: visible; position: relative; height: 45px; display: flex; justify-content: center; align-items: center; }
+.mode-track { display: flex; position: absolute; transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1); }
+.mode-item { min-width: 100px; text-align: center; padding: 10px 0; color: #888; font-size: 14px; cursor: pointer; }
 .mode-item.active { color: #000; background: var(--accent); border-radius: 20px; font-weight: bold; }
 
-.shutter-row { display: flex; justify-content: space-around; align-items: center; margin-top: 20px; }
-.shutter-btn { width: 70px; height: 70px; background: white; border-radius: 50%; border: 5px solid #000; outline: 2px solid white; }
-.gallery-circle { width: 50px; height: 50px; border-radius: 50%; background: #222; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-.gallery-circle img { width: 100%; height: 100%; object-fit: cover; }
-.rotate-btn { width: 50px; height: 50px; background: #222; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.zoom-pill { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 25px; gap: 8px; z-index: 20; border: 1px solid rgba(255,255,255,0.1); }
+.zoom-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; color: white; }
+.zoom-dot.active { background: white; color: black; font-weight: bold; }
 
-#modeOverlay { position: absolute; inset: 0; background: black; z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; }
+.controls { padding: 10px 0 40px; }
+.shutter-row { display: flex; justify-content: space-around; align-items: center; margin-top: 15px; }
+.shutter-btn { width: 75px; height: 75px; background: white; border-radius: 50%; border: 5px solid #000; outline: 2px solid white; cursor: pointer; }
+.gallery-circle { width: 50px; height: 50px; border-radius: 50%; background: #222; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.gallery-circle img { width: 100%; height: 100%; object-fit: cover; }
+.rotate-btn { width: 50px; height: 50px; background: #222; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; }
+
+#modeOverlay { position: absolute; inset: 0; background: black; z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; border-radius: 30px; }
+#timer { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); background: red; padding: 4px 12px; border-radius: 15px; font-size: 12px; display: none; z-index: 100; }
