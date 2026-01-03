@@ -3,18 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Camera App</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <title>Pro Camera</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="top-box">
     <div class="top-icons">
-        <div class="top-icon-btn">
-            <span class="material-symbols-outlined">info</span>
-            <div>About</div>
-        </div>
+        <div class="top-icon-btn"><span class="material-symbols-outlined">info</span><div>About</div></div>
         <div class="top-icon-btn" onclick="toggleFlash()">
             <span id="flashIcon" class="material-symbols-outlined">flash_off</span>
             <div id="flashLabel">Off</div>
@@ -47,20 +44,12 @@
             <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
         </div>
 
-        <div class="bottom-controls-area" id="bottomControlsArea">
-            <div class="zoom-area" id="zoomArea">
-                <div class="needle"></div>
-                <div class="zoom-pill" id="zoomPill">
-                    <div class="dots-view">
-                        <div class="zoom-dot" id="dot05" onclick="applyZoom(0.5)">.5x</div>
-                        <div class="zoom-dot active" id="dot1" onclick="applyZoom(1)">1x</div>
-                        <div class="zoom-dot" id="dot2" onclick="applyZoom(2)">2x</div>
-                        <div class="zoom-dot" id="dot5" onclick="applyZoom(5)">5x</div>
-                    </div>
-                    <div class="ruler-view" id="rulerView">
-                        <div class="ruler-track" id="rulerTrack"></div>
-                    </div>
-                </div>
+        <div class="bottom-controls-area">
+            <div class="zoom-pill" id="zoomPill">
+                <div class="zoom-dot" id="dot05" onclick="applyZoom(0.5)">.5</div>
+                <div class="zoom-dot active" id="dot1" onclick="applyZoom(1)">1x</div>
+                <div class="zoom-dot" id="dot2" onclick="applyZoom(2)">2</div>
+                <div class="zoom-dot" id="dot5" onclick="applyZoom(5)">5</div>
             </div>
         </div>
     </div>
@@ -70,30 +59,28 @@
     <div class="mode-container">
         <div class="mode-track" id="modeTrack">
             <div class="mode-item" onclick="setMode(0, 'video')">Video</div>
-            <div class="mode-item active" onclick="setMode(1, 'photo')">Photos</div>
+            <div class="mode-item" onclick="setMode(1, 'photo')">Photos</div>
             <div class="mode-item" onclick="setMode(2, 'hd-photo')">HD Photo</div>
-            <div class="mode-item" onclick="setMode(3, 'short')">Short Video</div>
-            <div class="mode-item" onclick="setMode(4, 'slowmo')">Slowmo</div>
+            <div class="mode-item" onclick="setMode(3, 'slowmo')">Slowmo</div>
         </div>
     </div>
     <div class="shutter-row">
         <div class="gallery-circle" onclick="openViewer()">
             <img id="thumbImg" src="">
-            <span id="galleryIcon" class="material-symbols-outlined" style="color:#666">image</span>
+            <span id="galleryIcon" class="material-symbols-outlined">image</span>
         </div>
         <div class="shutter-btn" id="shutter"></div>
-        <div class="rotate-btn" id="rotateBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">autorenew</span></div>
+        <div class="rotate-btn" onclick="toggleCamera()"><span class="material-symbols-outlined">autorenew</span></div>
     </div>
-</div>
-
-<div class="viewer" id="viewer">
-    <div class="viewer-header" onclick="closeViewer()"><span class="material-symbols-outlined">arrow_back</span></div>
-    <div class="viewer-body" id="vBody"></div>
-    <div class="viewer-footer"><button class="dl-btn" id="dlBtn"><span class="material-symbols-outlined">download</span> Download</button></div>
 </div>
 
 <canvas id="canvas" style="display:none;"></canvas>
 
+<div class="viewer" id="viewer">
+    <div class="viewer-header" onclick="closeViewer()"><span class="material-symbols-outlined">arrow_back</span></div>
+    <div class="viewer-body" id="vBody"></div>
+</div>
+
 <script src="script.js"></script>
 </body>
-                        </html>
+            </html>
