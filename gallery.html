@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    padding: 8px;
+}
+
+/* TOP BAR */
+.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 3;
+}
+
+/* Icons */
+.ic-navigation,
+.ic2 {
+    font-size: 28px;
+    cursor: pointer;
+}
+
+/* Popup overlay */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: none;
+    z-index: 1;
+}
+
+/* Three dot popup */
+.popup-box {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background: #fff;
+    border-radius: 14px;
+    min-width: 170px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+    display: none;
+    flex-direction: column;
+    animation: popupAnim 0.2s ease-out;
+    z-index: 4;
+    overflow: hidden;
+}
+
+.popup-item {
+    padding: 14px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: left;
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+}
+
+.popup-item:hover {
+    background: #f2f2f2;
+}
+
+.popup-item:first-child {
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+}
+
+.popup-item:last-child {
+    border-bottom-left-radius: 14px;
+    border-bottom-right-radius: 14px;
+}
+
+@keyframes popupAnim {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Page content */
+.tittle {
+    font-size: 55px;
+    font-weight: 400;
+    color: black;
+    margin-top: 40px;
+    margin-bottom: 0;
+}
+
+.des {
+    font-size: 14px;
+    font-weight: 400;
+    color: grey;
+    margin-top: 0;
+}
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    padding: 10px;
+    margin-top: 20px;
+}
+.photo-grid img {
+    width: 100%;
+    aspect-ratio: 1/1;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #222;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closeTopPopup()"></div>
+
+<!-- Top bar -->
+<div class="top">
+    <span class="material-symbols-outlined ic-navigation" onclick="goBack()">arrow_back</span>
+    <span class="material-symbols-outlined ic2" onclick="toggleTopPopup(event)">more_vert</span>
+
+    <!-- Popup -->
+    <div class="popup-box" id="topPopup">
+        <div class="popup-item" onclick="sendFeedback()">Feedback</div>
+        <div class="popup-item" onclick="openPrivacy()">Privacy Policy</div>
+    </div>
+</div>
+
+<!-- Content -->
+<p class="tittle">Photos</p>
+<p class="des">Powered by PixelSense Camera</p>
+<div id="photoGrid" class="photo-grid"></div>
+<script>
+// Back button action
+function goBack() {
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        // fallback to home page
+        window.location.href = "index.html";
+    }
+}
+
+// Three dot menu
+function toggleTopPopup(e) {
+    e.stopPropagation();
+    topPopup.style.display = "flex";
+    overlay.style.display = "block";
+}
+
+function closeTopPopup() {
+    topPopup.style.display = "none";
+    overlay.style.display = "none";
+}
+
+// Feedback / Privacy
+function sendFeedback() {
+    window.location.href = "mailto:Vishalvaishnavofficial@gmail.com";
+}
+
+function openPrivacy() {
+    window.location.href = "privacy.html";
+}
+function loadSavedPhotos() {
+    const grid = document.getElementById('photoGrid');
+    const photos = JSON.parse(localStorage.getItem('userPhotos') || '[]');
+    
+    if (photos.length === 0) {
+        grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:grey;">No photos captured yet.</p>';
+        return;
+    }
+
+    photos.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        grid.appendChild(img);
+    });
+}
+window.onload = loadSavedPhotos;
+</script>
+
+</body>
+  </html>
