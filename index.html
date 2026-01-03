@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pro Camera</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <title>Pro Camera App</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,7 +17,7 @@
             <div id="flashLabel">Off</div>
         </div>
         <div class="top-icon-btn" onclick="toggleGrid()">
-            <span id="gridIcon" class="material-symbols-outlined">grid_on</span>
+            <span id="gridIcon" class="material-symbols-outlined">grid_off</span>
             <div id="gridLabel">Grid</div>
         </div>
         <div class="top-icon-btn" onclick="toggleRatio()">
@@ -45,8 +45,8 @@
         </div>
 
         <div class="bottom-controls-area">
-            <div class="zoom-pill" id="zoomPill">
-                <div class="zoom-dot" id="dot05" onclick="applyZoom(0.5)">.5</div>
+            <div class="zoom-pill">
+                <div class="zoom-dot" id="dot05" onclick="applyZoom(0.7)">.5</div>
                 <div class="zoom-dot active" id="dot1" onclick="applyZoom(1)">1x</div>
                 <div class="zoom-dot" id="dot2" onclick="applyZoom(2)">2</div>
                 <div class="zoom-dot" id="dot5" onclick="applyZoom(5)">5</div>
@@ -67,20 +67,20 @@
     <div class="shutter-row">
         <div class="gallery-circle" onclick="openViewer()">
             <img id="thumbImg" src="">
-            <span id="galleryIcon" class="material-symbols-outlined">image</span>
+            <span id="galleryIcon" class="material-symbols-outlined" style="color:#666">image</span>
         </div>
         <div class="shutter-btn" id="shutter"></div>
         <div class="rotate-btn" onclick="toggleCamera()"><span class="material-symbols-outlined">autorenew</span></div>
     </div>
 </div>
 
-<canvas id="canvas" style="display:none;"></canvas>
-
 <div class="viewer" id="viewer">
     <div class="viewer-header" onclick="closeViewer()"><span class="material-symbols-outlined">arrow_back</span></div>
     <div class="viewer-body" id="vBody"></div>
 </div>
 
+<canvas id="canvas" style="display:none;"></canvas>
+
 <script src="script.js"></script>
 </body>
-            </html>
+                                                                                                 </html>
