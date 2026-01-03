@@ -1,35 +1,70 @@
 :root { --accent: #f7d8ba; --bg: #000; }
-* { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+* { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
 
-body { background: var(--bg); color: white; margin: 0; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+body { background: var(--bg); color: white; margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
 /* Top Bar */
-.top-box { height: 60px; display: flex; align-items: center; justify-content: space-around; z-index: 50; }
-.top-icon-btn { cursor: pointer; display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #ccc; }
+.top-box { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 50; }
+.top-icons { display: flex; gap: 20px; align-items: center; width: 100%; justify-content: space-around; }
+.top-icon-btn { cursor: pointer; display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #ccc; min-width: 45px; }
 .top-icon-btn span { font-size: 24px; color: white; }
 
-.viewport-container { flex: 1; padding: 0 10px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.viewport { width: 100%; height: 100%; background: #111; border-radius: 30px; position: relative; overflow: hidden; transition: aspect-ratio 0.3s ease; }
+#timer { font-variant-numeric: tabular-nums; font-weight: bold; color: white; background: rgba(255,0,0,0.8); padding: 5px 15px; border-radius: 20px; display: none; position: absolute; left: 50%; transform: translateX(-50%); top: 75px; z-index: 100; font-size: 13px; letter-spacing: 1px; }
 
-/* Fix: Default zoom 1x */
-#videoFeed { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); width: 100%; height: 100%; object-fit: cover; }
+.viewport-container { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; position: relative; }
+.viewport { width: 100%; height: 100%; margin: 0 8px; background: #111; border-radius: 28px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
 
-/* Mode Bar Alignment */
-.mode-container { width: 100%; overflow: visible; position: relative; height: 45px; display: flex; justify-content: center; align-items: center; }
-.mode-track { display: flex; position: absolute; transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1); }
-.mode-item { min-width: 100px; text-align: center; padding: 10px 0; color: #888; font-size: 14px; cursor: pointer; }
+#videoFeed { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); min-width: 100%; min-height: 100%; object-fit: cover; transition: transform 0.1s ease-out; pointer-events: none; }
+
+/* Grid Overlay */
+.grid-lines { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); pointer-events: none; z-index: 10; display: none; }
+.grid-cell { border: 0.5px solid rgba(255, 255, 255, 0.2); }
+
+#modeOverlay { position: absolute; inset: 0; background: black; z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; border-radius: 28px; }
+#modeOverlay span { font-size: 42px; color: white; margin-bottom: 8px; }
+#modeOverlay div { font-size: 12px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: #888; }
+
+.bottom-controls-area { z-index: 20; margin-bottom: 25px; width: 100%; display: flex; justify-content: center; position: relative; height: 60px; align-items: center; }
+
+/* Zoom UI */
+.zoom-area { width: 100%; display: flex; justify-content: center; position: relative; height: 100%; align-items: center; }
+.needle { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 2px; height: 60px; background: var(--accent); z-index: 30; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.zoom-pill { display: flex; background: rgba(0,0,0,0.85); padding: 6px; border-radius: 40px; transition: all 0.3s; min-width: 160px; position: relative; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+.dots-view { display: flex; gap: 8px; z-index: 25; transition: 0.3s; }
+.zoom-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; background: rgba(255,255,255,0.1); }
+.zoom-dot.active { background: var(--accent); color: #000; font-weight: bold; }
+
+.ruler-view { position: absolute; inset: 0; opacity: 0; pointer-events: none; overflow-x: scroll; scrollbar-width: none; display: flex; align-items: center; z-index: 20; }
+.ruler-track { display: flex; align-items: flex-end; gap: 20px; padding: 0 50%; height: 100%; }
+.tick { width: 1px; height: 12px; background: #555; flex-shrink: 0; }
+.tick.major { height: 24px; background: #fff; position: relative; }
+.tick.major::after { content: attr(data-val); position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #fff; }
+
+.zoom-pill.expanded { width: 85%; height: 50px; }
+.zoom-pill.expanded .dots-view { opacity: 0; pointer-events: none; }
+.zoom-pill.expanded .ruler-view { opacity: 1; pointer-events: auto; }
+.zoom-pill.expanded + .needle { opacity: 1; }
+
+/* Controls & Shutter */
+.controls { padding: 10px 0 40px; display: flex; flex-direction: column; align-items: center; z-index: 50; }
+.mode-container { width: 100%; overflow: hidden; position: relative; height: 50px; }
+.mode-track { display: flex; position: absolute; left: 50%; top: 50%; transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1); transform: translate(-50%, -50%); }
+.mode-item { padding: 8px 20px; color: #888; font-size: 14px; white-space: nowrap; cursor: pointer; min-width: 110px; text-align: center; }
 .mode-item.active { color: #000; background: var(--accent); border-radius: 20px; font-weight: bold; }
 
-.zoom-pill { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 25px; gap: 8px; z-index: 20; border: 1px solid rgba(255,255,255,0.1); }
-.zoom-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; color: white; }
-.zoom-dot.active { background: white; color: black; font-weight: bold; }
+.shutter-row { display: flex; width: 100%; justify-content: space-around; align-items: center; max-width: 400px; margin-top: 15px; }
+.gallery-circle { width: 55px; height: 55px; border-radius: 50%; background: #1a1a1a; border: 1px solid #333; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.gallery-circle img { width: 100%; height: 100%; object-fit: cover; display: none; }
 
-.controls { padding: 10px 0 40px; }
-.shutter-row { display: flex; justify-content: space-around; align-items: center; margin-top: 15px; }
-.shutter-btn { width: 75px; height: 75px; background: white; border-radius: 50%; border: 5px solid #000; outline: 2px solid white; cursor: pointer; }
-.gallery-circle { width: 50px; height: 50px; border-radius: 50%; background: #222; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.gallery-circle img { width: 100%; height: 100%; object-fit: cover; }
-.rotate-btn { width: 50px; height: 50px; background: #222; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; }
+.shutter-btn { width: 75px; height: 75px; background: white; border-radius: 50%; border: 6px solid #000; outline: 2px solid white; cursor: pointer; position: relative; }
+.shutter-btn.recording { background: #ff3b30; }
+.shutter-btn.recording::after { content: ''; position: absolute; inset: 20px; background: white; border-radius: 4px; }
 
-#modeOverlay { position: absolute; inset: 0; background: black; z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; border-radius: 30px; }
-#timer { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); background: red; padding: 4px 12px; border-radius: 15px; font-size: 12px; display: none; z-index: 100; }
+.rotate-btn { width: 55px; height: 55px; border-radius: 50%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; color: white; border: 1px solid #333; cursor: pointer; }
+
+.viewer { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; }
+.viewer-header { padding: 20px; cursor: pointer; }
+.viewer-body { flex: 1; display: flex; align-items: center; justify-content: center; }
+.viewer-body img, .viewer-body video { max-width: 100%; max-height: 100%; }
+.viewer-footer { padding: 30px; display: flex; justify-content: center; }
+.dl-btn { background: var(--accent); color: #000; padding: 14px 28px; border-radius: 30px; border: none; font-weight: bold; display: flex; gap: 10px; cursor: pointer; }
