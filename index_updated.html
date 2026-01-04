@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pro Camera App</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+    :root { --accent: #f7d8ba; --bg: #000; }
+    * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
+
+    body { background: var(--bg); color: white; margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Top Bar */
+    .top-box { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 50; }
+    .top-icons { display: flex; gap: 20px; align-items: center; }
+    .top-icon-btn { cursor: pointer; display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #ccc; min-width: 45px; }
+    .top-icon-btn span { font-size: 24px; color: white; }
+    .top-icon-btn.active span { color: var(--accent); }
+
+    #timer { font-variant-numeric: tabular-nums; font-weight: bold; color: white; background: rgba(255,0,0,0.8); padding: 5px 15px; border-radius: 20px; display: none; position: absolute; left: 50%; transform: translateX(-50%); top: 75px; z-index: 100; font-size: 13px; letter-spacing: 1px; }
+
+    .viewport-container { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; position: relative; }
+    .viewport { width: 100%; height: 100%; margin: 0 8px; background: #111; border-radius: 28px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+
+    /* Ratio classes (affect video sizing) */
+    .viewport.ratio-4-3 #videoFeed { width: auto !important; height: 100% !important; }
+    .viewport.ratio-16-9 #videoFeed { width: 100% !important; height: auto !important; }
+    .viewport.ratio-full #videoFeed { width: 100% !important; height: 100% !important; }
+
+    /* Gridlines */
+    .grid-overlay { position: absolute; inset: 0; pointer-events: none; display: none; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; z-index: 10; }
+    .grid-active .grid-overlay { display: grid; }
+    .grid-line { border: 0.5px solid rgba(255,255,255,0.3); }
+
+    #modeOverlay { position: absolute; inset: 0; background: black; z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; border-radius: 28px; }
+    #modeOverlay span { font-size: 42px; color: white; margin-bottom: 8px; }
+    #modeOverlay div { font-size: 12px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: #888; }
+
+    #videoFeed { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); min-width: 100%; min-height: 100%; object-fit: cover; transition: transform 0.1s ease-out; pointer-events: none; }
+
+    /* Zoom Slider */
+    .bottom-controls-area { z-index: 20; margin-bottom: 25px; width: 100%; display: flex; justify-content: center; position: relative; height: 60px; align-items: center; }
+    .zoom-area { width: 100%; display: flex; justify-content: center; position: relative; height: 100%; align-items: center; }
+    .needle { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 2px; height: 60px; background: var(--accent); z-index: 30; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+    .zoom-pill { display: flex; background: rgba(0,0,0,0.85); padding: 6px; border-radius: 40px; transition: all 0.3s; min-width: 160px; position: relative; align-items: center; justify-content: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+    .dots-view { display: flex; gap: 8px; z-index: 25; transition: 0.3s; }
+    .zoom-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; background: rgba(255,255,255,0.1); }
+    .zoom-dot.active { background: var(--accent); color: #000; font-weight: bold; }
+
+    .ruler-view { position: absolute; inset: 0; opacity: 0; pointer-events: none; overflow-x: scroll; scrollbar-width: none; display: flex; align-items: center; z-index: 20; }
+    .ruler-view::-webkit-scrollbar { display: none; }
+    .ruler-track { display: flex; align-items: flex-end; gap: 20px; padding: 0 50%; height: 100%; }
+    .tick { width: 1px; height: 12px; background: #555; flex-shrink: 0; }
+    .tick.major { height: 24px; background: #fff; position: relative; }
+    .tick.major::after { content: attr(data-val); position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 10px; color: #fff; }
+
+    .zoom-pill.expanded { width: 85%; height: 50px; }
+    .zoom-pill.expanded .dots-view { opacity: 0; pointer-events: none; }
+    .zoom-pill.expanded .ruler-view { opacity: 1; pointer-events: auto; }
+    .zoom-pill.expanded + .needle { opacity: 1; }
+
+    /* Controls */
+    .controls { padding: 10px 0 40px; display: flex; flex-direction: column; align-items: center; z-index: 50; }
+    .mode-container { width: 100%; overflow: hidden; position: relative; height: 50px; }
+    .mode-track { display: flex; position: absolute; left: 50%; top: 50%; transition: transform 0.4s cubic-bezier(0.1, 0.7, 0.1, 1); transform: translate(-50%, -50%); }
+    .mode-item { padding: 8px 20px; color: #888; font-size: 14px; white-space: nowrap; cursor: pointer; }
+    .mode-item.active { color: #000; background: var(--accent); border-radius: 20px; font-weight: bold; }
+
+    .shutter-row { display: flex; width: 100%; justify-content: space-around; align-items: center; max-width: 400px; margin-top: 15px; }
+    .gallery-circle { width: 55px; height: 55px; border-radius: 50%; background: #1a1a1a; border: 1px solid #333; overflow: hidden; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .gallery-circle img { width: 100%; height: 100%; object-fit: cover; display: none; }
+
+    .shutter-btn { width: 75px; height: 75px; background: white; border-radius: 50%; border: 6px solid #000; outline: 2px solid white; cursor: pointer; position: relative; }
+    .shutter-btn.recording { background: #ff3b30; }
+    .shutter-btn.recording::after { content: ''; position: absolute; inset: 20px; background: white; border-radius: 4px; }
+
+    .rotate-btn { width: 55px; height: 55px; border-radius: 50%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; color: white; border: 1px solid #333; cursor: pointer; }
+
+    .viewer { position: fixed; inset: 0; background: #000; z-index: 1000; display: none; flex-direction: column; }
+    .viewer-header { padding: 20px; }
+    .viewer-body { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .viewer-body img, .viewer-body video { max-width: 100%; max-height: 100%; }
+    .viewer-footer { padding: 30px; display: flex; justify-content: center; }
+    .dl-btn { background: var(--accent); color: #000; padding: 14px 28px; border-radius: 30px; border: none; font-weight: bold; display: flex; gap: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="top-box">
+    <div class="top-icons">
+        <div class="top-icon-btn" onclick="alert('Pro Camera v2.0\nHigh Definition Imaging System')">
+            <span class="material-symbols-outlined">info</span>
+            <div>About</div>
+        </div>
+        <div class="top-icon-btn" onclick="toggleFlash()">
+            <span id="flashIcon" class="material-symbols-outlined">flash_off</span>
+            <div id="flashLabel">Off</div>
+        </div>
+        <div class="top-icon-btn" id="gridToggle" onclick="toggleGrid()">
+            <span class="material-symbols-outlined">grid_on</span>
+            <div id="gridLabel">Grid</div>
+        </div>
+        <div class="top-icon-btn" onclick="toggleRatio()">
+            <span class="material-symbols-outlined">aspect_ratio</span>
+            <div id="ratioLabel">Full</div>
+        </div>
+    </div>
+</div>
+
+<div id="timer">00:00</div>
+
+<div class="viewport-container">
+    <div id="modeOverlay">
+        <span id="overlayIcon" class="material-symbols-outlined">photo_camera</span>
+        <div id="overlayText">Photo</div>
+    </div>
+
+    <div class="viewport ratio-full" id="viewport">
+        <div class="grid-overlay">
+            <div class="grid-line"></div><div class="grid-line"></div><div class="grid-line" style="border-right:none"></div>
+            <div class="grid-line"></div><div class="grid-line"></div><div class="grid-line" style="border-right:none"></div>
+            <div class="grid-line" style="border-bottom:none"></div><div class="grid-line" style="border-bottom:none"></div><div class="grid-line" style="border:none"></div>
+        </div>
+
+        <video id="videoFeed" autoplay playsinline muted></video>
+
+        <div class="bottom-controls-area">
+            <div class="zoom-area" id="zoomArea">
+                <div class="needle"></div>
+                <div class="zoom-pill" id="zoomPill">
+                    <div class="dots-view">
+                        <div class="zoom-dot" id="dot05" onclick="applyZoom(0.5)">.5x</div>
+                        <div class="zoom-dot active" id="dot1" onclick="applyZoom(1)">1x</div>
+                        <div class="zoom-dot" id="dot2" onclick="applyZoom(2)">2x</div>
+                        <div class="zoom-dot" id="dot5" onclick="applyZoom(5)">5x</div>
+                    </div>
+                    <div class="ruler-view" id="rulerView">
+                        <div class="ruler-track" id="rulerTrack"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="controls">
+    <div class="mode-container">
+        <div class="mode-track" id="modeTrack">
+            <div class="mode-item" onclick="setMode(0, 'video')">Video</div>
+            <div class="mode-item active" onclick="setMode(1, 'photo')">Photos</div>
+            <div class="mode-item" onclick="setMode(2, 'hdphoto')">HD Photo</div>
+            <div class="mode-item" onclick="setMode(3, 'short')">Short Video</div>
+            <div class="mode-item" onclick="setMode(4, 'slowmo')">Slowmo</div>
+        </div>
+    </div>
+    <div class="shutter-row">
+        <div class="gallery-circle" onclick="openViewer()">
+            <img id="thumbImg" src="">
+            <span id="galleryIcon" class="material-symbols-outlined" style="color:#666">image</span>
+        </div>
+        <div class="shutter-btn" id="shutter"></div>
+        <div class="rotate-btn" id="rotateBtn" onclick="toggleCamera()"><span class="material-symbols-outlined">autorenew</span></div>
+    </div>
+</div>
+
+<div class="viewer" id="viewer">
+    <div class="viewer-header" onclick="closeViewer()"><span class="material-symbols-outlined">arrow_back</span></div>
+    <div class="viewer-body" id="vBody"></div>
+    <div class="viewer-footer"><button class="dl-btn" id="dlBtn"><span class="material-symbols-outlined">download</span> Download</button></div>
+</div>
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+<script>
+const video = document.getElementById('videoFeed');
+const zoomPill = document.getElementById('zoomPill');
+const rulerView = document.getElementById('rulerView');
+const modeTrack = document.getElementById('modeTrack');
+const shutter = document.getElementById('shutter');
+const timerDisplay = document.getElementById('timer');
+const modeOverlay = document.getElementById('modeOverlay');
+
+let currentFacing = "environment", maxZoom = 10, currentMode = "photo";
+let currentZoom = 1; // track current zoom (default 1x)
+let mediaRecorder, chunks = [], lastMediaURL = null, lastMediaType = null;
+let recordingSeconds = 0, timerInterval, flashMode = 'off';
+
+async function startCamera(face) {
+    try {
+        if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); }
+
+        // Request higher resolution for better quality
+        const constraints = {
+            video: { 
+                facingMode: face, 
+                width: { ideal: 4096 }, 
+                height: { ideal: 2160 } 
+            },
+            audio: true
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = stream;
+        video.onloadedmetadata = () => {
+            const track = stream.getVideoTracks()[0];
+            const caps = track.getCapabilities();
+            maxZoom = caps.zoom ? caps.zoom.max : 10;
+            buildRuler();
+
+            // Ensure default ratio is Full and video sizing set
+            document.getElementById('ratioLabel').innerText = 'Full';
+            const vp = document.getElementById('viewport');
+            vp.classList.remove('ratio-4-3','ratio-16-9');
+            vp.classList.add('ratio-full');
+            video.style.width = '100%';
+            video.style.height = '100%';
+
+            // Enforce default 1x zoom on camera start
+            currentZoom = 1;
+            applyZoom(1);
+
+            // Center ruler to 1x position if ruler exists
+            setTimeout(() => {
+                // attempt to center ruler at 1x (if track built)
+                const trackEl = document.getElementById('rulerTrack');
+                if (trackEl && trackEl.children.length) {
+                    // find index of 1x tick: buildRuler uses 0.5,1,1.5,2...
+                    let idx = 0;
+                    for (let i=0;i<trackEl.children.length;i++){
+                        const el = trackEl.children[i];
+                        const val = el.getAttribute('data-val');
+                        if (val && val.startsWith('1')) { idx = i; break; }
+                    }
+                    // approximate scroll position
+                    const child = trackEl.children[idx];
+                    if (child) {
+                        const parent = document.getElementById('rulerView');
+                        const targetLeft = child.offsetLeft - (parent.clientWidth/2) + (child.clientWidth/2);
+                        parent.scrollLeft = targetLeft;
+                    }
+                }
+            }, 80);
+        };
+    } catch (err) { console.error(err); }
+}
+
+function toggleGrid() {
+    const vp = document.getElementById('viewport');
+    const btn = document.getElementById('gridToggle');
+    const isActive = vp.classList.toggle('grid-active');
+    btn.classList.toggle('active', isActive);
+}
+
+async function setFlash(state) {
+    const track = video.srcObject?.getVideoTracks()[0];
+    if (track && track.getCapabilities().torch) {
+        try { await track.applyConstraints({ advanced: [{ torch: state }] }); } catch (e) {}
+    }
+}
+
+function toggleFlash() {
+    const icon = document.getElementById('flashIcon');
+    const label = document.getElementById('flashLabel');
+    if(flashMode === 'off') { flashMode = 'on'; icon.innerText = 'flash_on'; label.innerText = 'On'; setFlash(true); }
+    else if(flashMode === 'on') { flashMode = 'auto'; icon.innerText = 'flash_auto'; label.innerText = 'Auto'; setFlash(false); }
+    else { flashMode = 'off'; icon.innerText = 'flash_off'; label.innerText = 'Off'; setFlash(false); }
+}
+
+function toggleCamera() {
+    currentFacing = currentFacing === "environment" ? "user" : "environment";
+    startCamera(currentFacing);
+}
+
+function setMode(idx, mode) {
+    if (currentMode === mode) return;
+    const icons = { 'photo': 'photo_camera', 'hdphoto': 'high_quality', 'video': 'videocam', 'short': 'bolt', 'slowmo': 'slow_motion_video' };
+    const labels = { 'photo': 'Photo', 'hdphoto': 'HD Photo', 'video': 'Video', 'short': 'Short Video', 'slowmo': 'Slow Motion' };
+
+    document.getElementById('overlayIcon').innerText = icons[mode];
+    document.getElementById('overlayText').innerText = labels[mode];
+    modeOverlay.style.display = 'flex';
+    setTimeout(() => { modeOverlay.style.display = 'none'; }, 800);
+
+    currentMode = mode;
+    document.querySelectorAll('.mode-item').forEach((m, i) => m.classList.toggle('active', i === idx));
+    modeTrack.style.transform = `translate(calc(-50% + ${(1 - idx) * 110}px), -50%)`;
+}
+
+async function takePhoto() {
+    if (flashMode === 'auto') {
+        await setFlash(true);
+        setTimeout(async () => {
+            captureFrame();
+            await setFlash(false);
+        }, 500);
+    } else {
+        captureFrame();
+    }
+}
+
+function captureFrame() {
+    const captureCanvas = document.getElementById('canvas');
+    // Force canvas to high resolution for HD mode
+    captureCanvas.width = video.videoWidth; 
+    captureCanvas.height = video.videoHeight;
+
+    const ctx = captureCanvas.getContext('2d', { alpha: false });
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    ctx.drawImage(video, 0, 0);
+
+    // If HD Photo mode, use maximum quality JPEG (1.0)
+    const quality = currentMode === 'hdphoto' ? 1.0 : 0.8;
+    lastMediaURL = captureCanvas.toDataURL('image/jpeg', quality);
+    lastMediaType = 'image';
+    updateGalleryPreview(lastMediaURL);
+}
+
+async function startRecording() {
+    if (flashMode === 'auto') await setFlash(true);
+    chunks = [];
+    mediaRecorder = new MediaRecorder(video.srcObject);
+    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        lastMediaURL = URL.createObjectURL(blob);
+        lastMediaType = 'video';
+        updateGalleryPreview(null);
+        if (flashMode === 'auto') await setFlash(false);
+    };
+    mediaRecorder.start();
+    shutter.classList.add('recording');
+    timerDisplay.style.display = 'block';
+    recordingSeconds = 0;
+    updateTimerUI();
+    timerInterval = setInterval(() => {
+        recordingSeconds++;
+        updateTimerUI();
+        if (currentMode === 'short' && recordingSeconds >= 30) stopRecording();
+    }, 1000);
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== "inactive") mediaRecorder.stop();
+    shutter.classList.remove('recording');
+    timerDisplay.style.display = 'none';
+    clearInterval(timerInterval);
+}
+
+function updateGalleryPreview(url) {
+    const thumbImg = document.getElementById('thumbImg');
+    const galleryIcon = document.getElementById('galleryIcon');
+    if (lastMediaType === 'image') {
+        thumbImg.src = url; thumbImg.style.display = 'block'; galleryIcon.style.display = 'none';
+    } else {
+        thumbImg.style.display = 'none'; galleryIcon.innerText = 'videocam';
+        galleryIcon.style.display = 'block'; galleryIcon.style.color = 'var(--accent)';
+    }
+}
+
+function toggleRatio() {
+    const vp = document.getElementById('viewport');
+    const label = document.getElementById('ratioLabel');
+    // clear any ratio classes
+    vp.classList.remove('ratio-4-3', 'ratio-16-9', 'ratio-full');
+
+    const current = label.innerText;
+    if(current === 'Full') {
+        label.innerText = '4:3';
+        vp.classList.add('ratio-4-3');
+        // make video fill height (crop sides) to approximate 4:3
+        video.style.width = 'auto';
+        video.style.height = '100%';
+    }
+    else if(current === '4:3') {
+        label.innerText = '16:9';
+        vp.classList.add('ratio-16-9');
+        // make video fill width (crop top/bottom) to approximate 16:9
+        video.style.width = '100%';
+        video.style.height = 'auto';
+    }
+    else {
+        label.innerText = 'Full';
+        vp.classList.add('ratio-full');
+        video.style.width = '100%';
+        video.style.height = '100%';
+    }
+
+    // re-apply the current zoom so transform keeps scale
+    applyZoom(currentZoom);
+}
+
+function buildRuler() {
+    const track = document.getElementById('rulerTrack');
+    track.innerHTML = '';
+    for(let i=0.5; i<=maxZoom; i+=0.5) {
+        if(i === 0.5 || Number.isInteger(i)) track.innerHTML += `<div class="tick major" data-val="${i}x"></div>`;
+        else track.innerHTML += `<div class="tick"></div>`;
+    }
+}
+
+function updateTimerUI() {
+    const fmt = s => Math.floor(s/60).toString().padStart(2,'0') + ":" + (s%60).toString().padStart(2,'0');
+    timerDisplay.innerText = currentMode === 'short' ? `${fmt(recordingSeconds)} / 00:30` : fmt(recordingSeconds);
+}
+
+shutter.onclick = () => {
+    if (currentMode === 'photo' || currentMode === 'hdphoto') takePhoto();
+    else (mediaRecorder?.state === "recording" ? stopRecording() : startRecording());
+};
+
+function openViewer() {
+    if (!lastMediaURL) return;
+    const vBody = document.getElementById('vBody');
+    vBody.innerHTML = '';
+    if (lastMediaType === 'image') {
+        vBody.innerHTML = `<img src="${lastMediaURL}">`;
+    } else {
+        const videoEl = document.createElement('video');
+        videoEl.src = lastMediaURL;
+        videoEl.controls = true;
+        videoEl.autoplay = true;
+        videoEl.style.width = '100%';
+        if (currentMode === 'slowmo') {
+            videoEl.addEventListener('timeupdate', () => {
+                if (videoEl.currentTime > 2) videoEl.playbackRate = 0.4;
+                else videoEl.playbackRate = 1.0;
+            });
+        }
+        vBody.appendChild(videoEl);
+    }
+    document.getElementById('viewer').style.display = 'flex';
+}
+function closeViewer() { document.getElementById('viewer').style.display = 'none'; }
+
+let holdTimer;
+zoomPill.onmousedown = zoomPill.ontouchstart = () => { holdTimer = setTimeout(() => zoomPill.classList.add('expanded'), 300); };
+window.onmouseup = window.ontouchend = () => { clearTimeout(holdTimer); zoomPill.classList.remove('expanded'); };
+rulerView.onscroll = () => {
+    if(!zoomPill.classList.contains('expanded')) return;
+    const scrollPerc = rulerView.scrollLeft / (rulerView.scrollWidth - rulerView.clientWidth);
+    applyZoom(0.5 + (scrollPerc * (maxZoom - 0.5)));
+};
+
+function applyZoom(val) {
+    // clamp
+    const v = Math.max(0.5, Math.min(val, maxZoom || 10));
+    currentZoom = v;
+    video.style.transform = `translate(-50%, -50%) scale(${v})`;
+    document.querySelectorAll('.zoom-dot').forEach(d => {
+        const dv = d.id === 'dot05' ? 0.5 : parseFloat(d.innerText);
+        d.classList.toggle('active', Math.abs(dv - v) < 0.25);
+    });
+}
+
+startCamera(currentFacing);
+</script>
+</body>
+    </html>
