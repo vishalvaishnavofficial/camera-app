@@ -6,62 +6,70 @@
     <title>Pro Camera App</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
-    :root { --accent: #f7d8ba; --bg: #000; --soft-peach: rgba(247, 216, 186, 0.3); }
-    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+    :root { --accent: #f7d8ba; --bg: #000; --soft-peach: rgba(247, 216, 186, 0.25); }
+    * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
 
-    body { background: var(--bg); color: white; margin: 0; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    body { background: var(--bg); color: white; margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
     /* Top Bar */
-    .top-box { height: 70px; display: flex; align-items: center; justify-content: space-around; z-index: 50; padding: 0 5px; }
-    .top-icon-btn { cursor: pointer; display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #aaa; min-width: 60px; }
+    .top-box { height: 70px; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; z-index: 50; }
+    .top-icon-btn { cursor: pointer; display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #aaa; min-width: 55px; }
     .top-icon-btn span { font-size: 26px; color: white; margin-bottom: 2px; }
+    .top-icon-btn.active span { color: var(--accent); }
 
-    /* Viewport: Fixed Width (100vw), Height changes based on ratio */
-    .viewport-container { flex: 1; display: flex; align-items: center; justify-content: center; background: #000; position: relative; overflow: hidden; }
+    #countdown-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); font-size: 80px; font-weight: bold; color: white; z-index: 300; pointer-events: none; display: none; }
+
+    .viewport-container { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; position: relative; padding: 5px; }
     
-    .viewport { 
-        background: #111; 
-        position: relative; 
-        overflow: hidden; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center;
-        width: 100vw; 
-        transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+    .viewport { background: #111; border-radius: 24px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .viewport.ratio-4-3 { aspect-ratio: 3 / 4; height: 70%; width: 100%; }
+    .viewport.ratio-16-9 { aspect-ratio: 9 / 16; height: 90%; width: 100%; }
+    .viewport.ratio-full { width: 100%; height: 100%; border-radius: 22px; }
+
+    #videoFeed { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); min-width: 100%; min-height: 100%; object-fit: cover; pointer-events: none; }
+
+    .controls { padding-bottom: 40px; display: flex; flex-direction: column; align-items: center; z-index: 50; background: black; width: 100%; }
     
-    .ratio-4-3 { height: calc(100vw * 4 / 3); }
-    .ratio-1-1 { height: 100vw; } /* New Square Ratio */
-    .ratio-full { height: 100%; }
+    .mode-container { width: 100%; overflow: visible; position: relative; height: 45px; margin-bottom: 15px; }
+    .mode-track { display: flex; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); will-change: transform; }
+    .mode-item { padding: 8px 18px; color: #777; font-size: 13px; white-space: nowrap; cursor: pointer; text-transform: uppercase; letter-spacing: 1.2px; transition: all 0.3s ease; border-radius: 20px; }
+    .mode-item.active { color: black; background: var(--accent); font-weight: bold; }
 
-    #videoFeed { position: absolute; min-width: 100%; min-height: 100%; object-fit: cover; pointer-events: none; }
-
-    /* Controls */
-    .controls { padding-bottom: 40px; display: flex; flex-direction: column; align-items: center; background: black; z-index: 50; }
-    .mode-container { width: 100%; height: 50px; position: relative; overflow: hidden; margin-bottom: 10px; }
-    .mode-track { display: flex; position: absolute; left: 0; top: 50%; transition: transform 0.4s cubic-bezier(0.2, 1, 0.3, 1); will-change: transform; }
-    .mode-item { padding: 8px 20px; color: #888; font-size: 13px; white-space: nowrap; text-transform: uppercase; letter-spacing: 1.2px; transition: 0.3s; border-radius: 25px; margin: 0 5px; }
-    .mode-item.active { color: var(--accent); background: var(--soft-peach); font-weight: bold; }
-
-    .shutter-row { display: flex; width: 100%; justify-content: space-around; align-items: center; max-width: 420px; }
+    .shutter-row { display: flex; width: 100%; justify-content: space-around; align-items: center; max-width: 400px; }
     .shutter-btn { width: 75px; height: 75px; background: white; border-radius: 50%; border: 4px solid #000; outline: 2px solid white; cursor: pointer; }
-    .shutter-btn.recording { background: #ff3b30; border-radius: 15px; }
-    .gallery-circle, .rotate-btn { width: 55px; height: 55px; border-radius: 50%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; border: 1px solid #333; cursor: pointer; overflow: hidden; }
+
+    /* Gallery Circle Fix */
+    .gallery-circle { width: 52px; height: 52px; border-radius: 50%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; border: 1px solid #333; overflow: hidden; cursor: pointer; }
     .gallery-circle img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .rotate-btn { width: 52px; height: 52px; border-radius: 50%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; border: 1px solid #333; }
+
+    .zoom-pill { display: flex; background: rgba(0,0,0,0.6); padding: 5px; border-radius: 40px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); }
+    .zoom-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; }
+    .zoom-dot.active { background: var(--accent); color: #000; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="top-box">
-    <div class="top-icon-btn" onclick="toggleFlash()"><span id="fIcon" class="material-symbols-outlined">flash_off</span><div>Flash</div></div>
-    <div class="top-icon-btn" onclick="toggleTimer()"><span id="tIcon" class="material-symbols-outlined">timer_off</span><div id="tLbl">Timer</div></div>
-    <div class="top-icon-btn" onclick="toggleRatio()"><span class="material-symbols-outlined">aspect_ratio</span><div id="rLbl">Full</div></div>
+    <div class="top-icon-btn" onclick="toggleFlash()"><span id="flashIcon" class="material-symbols-outlined">flash_off</span><div>Flash</div></div>
+    <div class="top-icon-btn" onclick="toggleTimer()"><span id="timerIcon" class="material-symbols-outlined">timer_off</span><div id="timerLabel">Off</div></div>
+    <div class="top-icon-btn" onclick="toggleRatio()"><span class="material-symbols-outlined">aspect_ratio</span><div id="ratioLabel">Full</div></div>
     <div class="top-icon-btn" onclick="document.getElementById('viewport').classList.toggle('grid-active')"><span class="material-symbols-outlined">grid_on</span><div>Grid</div></div>
+    <div class="top-icon-btn" onclick="alert('Settings')"><span class="material-symbols-outlined">settings</span><div>Settings</div></div>
 </div>
+
+<div id="countdown-display"></div>
 
 <div class="viewport-container">
     <div class="viewport ratio-full" id="viewport">
         <video id="videoFeed" autoplay playsinline muted></video>
+        <div class="zoom-pill">
+            <div class="zoom-dot" onclick="applyZoom(0.5)">.5</div>
+            <div class="zoom-dot active" id="z1" onclick="applyZoom(1)">1x</div>
+            <div class="zoom-dot" onclick="applyZoom(2)">2</div>
+            <div class="zoom-dot" onclick="applyZoom(5)">5</div>
+        </div>
     </div>
 </div>
 
@@ -71,6 +79,8 @@
             <div class="mode-item" onclick="setMode(0, 'video')">Video</div>
             <div class="mode-item active" onclick="setMode(1, 'photo')">Photo</div>
             <div class="mode-item" onclick="setMode(2, 'hdphoto')">HD Pro</div>
+            <div class="mode-item" onclick="setMode(3, 'short')">Short</div>
+            <div class="mode-item" onclick="setMode(4, 'slowmo')">Slowmo</div>
         </div>
     </div>
     <div class="shutter-row">
@@ -89,69 +99,111 @@
 const video = document.getElementById('videoFeed');
 const modeTrack = document.getElementById('modeTrack');
 const shutter = document.getElementById('shutter');
-let currentMode = "photo", currentFacing = "environment", mediaRecorder, chunks = [];
+const countdownDisplay = document.getElementById('countdown-display');
 
-async function init() {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacing, width: 3840, height: 2160 }, audio: true });
-    video.srcObject = stream;
+let currentMode = "photo", timerVal = 0, currentFacing = "environment";
+
+async function initCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: currentFacing, width: { ideal: 1920 }, height: { ideal: 1080 } } 
+        });
+        video.srcObject = stream;
+    } catch (err) { alert("Camera error: " + err); }
 }
 
 function setMode(idx, mode) {
     currentMode = mode;
     const items = document.querySelectorAll('.mode-item');
     items.forEach((item, i) => item.classList.toggle('active', i === idx));
-    const offset = (document.querySelector('.mode-container').offsetWidth / 2) - (items[idx].offsetLeft + items[idx].offsetWidth / 2);
+    const container = document.querySelector('.mode-container');
+    const activeItem = items[idx];
+    const offset = (container.offsetWidth / 2) - (activeItem.offsetLeft + activeItem.offsetWidth / 2);
+    modeTrack.style.left = '0px'; 
     modeTrack.style.transform = `translate(${offset}px, -50%)`;
-}
-
-function toggleRatio() {
-    const vp = document.getElementById('viewport');
-    const lbl = document.getElementById('rLbl');
-    if (vp.classList.contains('ratio-full')) { vp.className = 'viewport ratio-4-3'; lbl.innerText = '4:3'; }
-    else if (vp.classList.contains('ratio-4-3')) { vp.className = 'viewport ratio-1-1'; lbl.innerText = '1:1'; }
-    else { vp.className = 'viewport ratio-full'; lbl.innerText = 'Full'; }
-}
-
-shutter.onclick = () => {
-    if (currentMode.includes('photo')) capture();
-    else if (mediaRecorder?.state === "recording") stopRec();
-    else startRec();
-};
-
-function saveMedia(dataUrl, type) {
-    const gallery = JSON.parse(localStorage.getItem('camera_gallery') || '[]');
-    gallery.unshift({ data: dataUrl, type: type, date: Date.now() });
-    localStorage.setItem('camera_gallery', JSON.stringify(gallery));
-    document.getElementById('thumbImg').src = dataUrl;
-    document.getElementById('thumbImg').style.display = 'block';
-    document.getElementById('galleryIcon').style.display = 'none';
 }
 
 function capture() {
     const canvas = document.getElementById('canvas');
-    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
-    saveMedia(canvas.toDataURL('image/jpeg'), 'image');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    
+    const data = canvas.toDataURL('image/jpeg', 0.7); // 0.7 quality saves space
+
+    // Save to LocalStorage
+    let gallery = JSON.parse(localStorage.getItem('camera_gallery') || '[]');
+    gallery.unshift({ type: 'image', data: data, date: Date.now() });
+    
+    try {
+        localStorage.setItem('camera_gallery', JSON.stringify(gallery));
+    } catch(e) {
+        alert("Storage full! Please clear some photos in the gallery.");
+    }
+
+    // Update Thumbnail
+    updateThumbnail(data);
+    
+    // Flash effect
+    document.body.style.backgroundColor = 'white';
+    setTimeout(() => document.body.style.backgroundColor = 'black', 40);
 }
 
-async function startRec() {
-    chunks = [];
-    mediaRecorder = new MediaRecorder(video.srcObject);
-    mediaRecorder.ondataavailable = e => chunks.push(e.data);
-    mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/mp4' });
-        const reader = new FileReader();
-        reader.onloadend = () => saveMedia(reader.result, 'video');
-        reader.readAsDataURL(blob);
-    };
-    mediaRecorder.start();
-    shutter.classList.add('recording');
+function updateThumbnail(src) {
+    const thumb = document.getElementById('thumbImg');
+    const icon = document.getElementById('galleryIcon');
+    if(src) {
+        thumb.src = src;
+        thumb.style.display = 'block';
+        icon.style.display = 'none';
+    }
 }
 
-function stopRec() { mediaRecorder.stop(); shutter.classList.remove('recording'); }
+function toggleTimer() {
+    const sequence = [0, 3, 5, 10];
+    timerVal = sequence[(sequence.indexOf(timerVal) + 1) % sequence.length];
+    document.getElementById('timerLabel').innerText = timerVal === 0 ? 'Off' : timerVal + 's';
+}
 
-function toggleCamera() { currentFacing = currentFacing === "environment" ? "user" : "environment"; init(); }
-window.onload = () => { init(); setMode(1, 'photo'); };
+shutter.onclick = () => {
+    if (timerVal > 0) {
+        let count = timerVal;
+        countdownDisplay.style.display = 'block';
+        countdownDisplay.innerText = count;
+        const timer = setInterval(() => {
+            count--;
+            if (count <= 0) { clearInterval(timer); countdownDisplay.style.display = 'none'; capture(); }
+            else { countdownDisplay.innerText = count; }
+        }, 1000);
+    } else { capture(); }
+};
+
+function toggleCamera() {
+    currentFacing = currentFacing === "environment" ? "user" : "environment";
+    initCamera();
+}
+
+function toggleRatio() {
+    const vp = document.getElementById('viewport');
+    const label = document.getElementById('ratioLabel');
+    if (vp.classList.contains('ratio-full')) { vp.classList.replace('ratio-full', 'ratio-4-3'); label.innerText = '4:3'; }
+    else if (vp.classList.contains('ratio-4-3')) { vp.classList.replace('ratio-4-3', 'ratio-16-9'); label.innerText = '16:9'; }
+    else { vp.classList.replace('ratio-16-9', 'ratio-full'); label.innerText = 'Full'; }
+}
+
+function applyZoom(v) {
+    video.style.transform = `translate(-50%, -50%) scale(${v})`;
+    document.querySelectorAll('.zoom-dot').forEach(d => d.classList.toggle('active', d.innerText.includes(v)));
+}
+
+window.onload = () => { 
+    initCamera();
+    setMode(1, 'photo'); 
+    // Load last photo into thumb
+    const gallery = JSON.parse(localStorage.getItem('camera_gallery') || '[]');
+    if(gallery.length > 0) updateThumbnail(gallery[0].data);
+};
 </script>
 </body>
-</html>
+        </html>
