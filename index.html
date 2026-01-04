@@ -6,69 +6,96 @@
     <title>Pro Camera App</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
-    :root { --accent: #f7d8ba; --bg: #000; --soft-peach: rgba(247, 216, 186, 0.25); }
-    * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
+    :root { --accent: #f7d8ba; --bg: #000; }
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 
-    body { background: var(--bg); color: white; margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    body { background: var(--bg); color: white; margin: 0; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
     /* Top Bar */
-    .top-box { height: 70px; display: flex; align-items: center; justify-content: space-around; padding: 0 10px; z-index: 50; }
+    .top-box { height: 70px; display: flex; align-items: center; justify-content: space-around; z-index: 100; background: black; }
     .top-icon-btn { cursor: pointer; display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #aaa; min-width: 55px; }
-    .top-icon-btn span { font-size: 26px; color: white; margin-bottom: 2px; }
+    .top-icon-btn span { font-size: 26px; color: white; }
     .top-icon-btn.active span { color: var(--accent); }
 
-    #countdown-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); font-size: 80px; font-weight: bold; color: white; z-index: 300; pointer-events: none; display: none; }
-
-    .viewport-container { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #000; position: relative; padding: 5px; }
+    /* Viewport & Grid */
+    .viewport-container { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; background: #000; padding: 10px; }
+    .viewport { background: #111; border-radius: 20px; position: relative; overflow: hidden; transition: all 0.3s ease; display: flex; justify-content: center; align-items: center; }
     
-    .viewport { background: #111; border-radius: 24px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-    .viewport.ratio-4-3 { aspect-ratio: 3 / 4; height: 70%; width: 100%; }
-    .viewport.ratio-16-9 { aspect-ratio: 9 / 16; height: 90%; width: 100%; }
-    .viewport.ratio-full { width: 100%; height: 100%; border-radius: 22px; }
+    .viewport.ratio-4-3 { aspect-ratio: 3 / 4; height: 80%; }
+    .viewport.ratio-16-9 { aspect-ratio: 9 / 16; height: 100%; }
+    .viewport.ratio-full { width: 100%; height: 100%; border-radius: 0; }
 
-    #videoFeed { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); min-width: 100%; min-height: 100%; object-fit: cover; pointer-events: none; }
+    #videoFeed { position: absolute; min-width: 100%; min-height: 100%; object-fit: cover; }
 
-    .controls { padding-bottom: 40px; display: flex; flex-direction: column; align-items: center; z-index: 50; background: black; width: 100%; }
-    
-    .mode-container { width: 100%; overflow: visible; position: relative; height: 45px; margin-bottom: 15px; }
-    .mode-track { display: flex; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); will-change: transform; }
-    .mode-item { padding: 8px 18px; color: #777; font-size: 13px; white-space: nowrap; cursor: pointer; text-transform: uppercase; letter-spacing: 1.2px; transition: all 0.3s ease; border-radius: 20px; }
-    .mode-item.active { color: black; background: var(--accent); font-weight: bold; }
+    /* Grid Lines CSS */
+    .viewport.grid-active::before, .viewport.grid-active::after {
+        content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+        pointer-events: none; z-index: 10;
+    }
+    .viewport.grid-active::before {
+        border-left: 1px solid rgba(255,255,255,0.3); border-right: 1px solid rgba(255,255,255,0.3);
+        left: 33.33%; right: 33.33%;
+    }
+    .viewport.grid-active::after {
+        border-top: 1px solid rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.3);
+        top: 33.33%; bottom: 33.33%;
+    }
 
-    .shutter-row { display: flex; width: 100%; justify-content: space-around; align-items: center; max-width: 400px; }
-    .shutter-btn { width: 75px; height: 75px; background: white; border-radius: 50%; border: 4px solid #000; outline: 2px solid white; cursor: pointer; }
+    /* Zoom Controls Fixed */
+    .zoom-pill { 
+        position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+        display: flex; background: rgba(0,0,0,0.5); padding: 4px; border-radius: 30px; 
+        z-index: 200; border: 1px solid rgba(255,255,255,0.2);
+    }
+    .zoom-dot { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; color: white; }
+    .zoom-dot.active { background: var(--accent); color: black; font-weight: bold; }
 
-    /* Gallery Circle Fix */
-    .gallery-circle { width: 52px; height: 52px; border-radius: 50%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; border: 1px solid #333; overflow: hidden; cursor: pointer; }
+    /* Controls */
+    .controls { padding-bottom: 30px; background: black; z-index: 100; }
+    .mode-container { height: 40px; position: relative; margin-bottom: 10px; overflow: hidden; }
+    .mode-track { display: flex; position: absolute; left: 50%; transition: 0.3s; align-items: center; }
+    .mode-item { padding: 5px 15px; font-size: 12px; color: #666; text-transform: uppercase; white-space: nowrap; }
+    .mode-item.active { color: black; background: var(--accent); border-radius: 15px; font-weight: bold; }
+
+    .shutter-row { display: flex; justify-content: space-around; align-items: center; width: 100%; max-width: 400px; margin: 0 auto; }
+    .shutter-btn { width: 70px; height: 70px; background: white; border-radius: 50%; border: 4px solid #000; outline: 2px solid white; }
+    .gallery-circle { width: 50px; height: 50px; background: #222; border-radius: 50%; overflow: hidden; display: flex; justify-content: center; align-items: center; }
     .gallery-circle img { width: 100%; height: 100%; object-fit: cover; }
-    
-    .rotate-btn { width: 52px; height: 52px; border-radius: 50%; background: #1a1a1a; display: flex; justify-content: center; align-items: center; border: 1px solid #333; }
+    .rotate-btn { color: white; }
 
-    .zoom-pill { display: flex; background: rgba(0,0,0,0.6); padding: 5px; border-radius: 40px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); }
-    .zoom-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; }
-    .zoom-dot.active { background: var(--accent); color: #000; font-weight: bold; }
+    #countdown-display { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 100px; z-index: 300; display: none; }
     </style>
 </head>
 <body>
 
 <div class="top-box">
-    <div class="top-icon-btn" onclick="toggleFlash()"><span id="flashIcon" class="material-symbols-outlined">flash_off</span><div>Flash</div></div>
-    <div class="top-icon-btn" onclick="toggleTimer()"><span id="timerIcon" class="material-symbols-outlined">timer_off</span><div id="timerLabel">Off</div></div>
-    <div class="top-icon-btn" onclick="toggleRatio()"><span class="material-symbols-outlined">aspect_ratio</span><div id="ratioLabel">Full</div></div>
-    <div class="top-icon-btn" onclick="document.getElementById('viewport').classList.toggle('grid-active')"><span class="material-symbols-outlined">grid_on</span><div>Grid</div></div>
-    <div class="top-icon-btn" onclick="alert('Settings')"><span class="material-symbols-outlined">settings</span><div>Settings</div></div>
+    <div class="top-icon-btn" onclick="toggleFlash()">
+        <span id="flashIcon" class="material-symbols-outlined">flash_off</span>
+        <div>Flash</div>
+    </div>
+    <div class="top-icon-btn" onclick="toggleTimer()">
+        <span id="timerIcon" class="material-symbols-outlined">timer_off</span>
+        <div id="timerLabel">Off</div>
+    </div>
+    <div class="top-icon-btn" onclick="toggleRatio()">
+        <span class="material-symbols-outlined">aspect_ratio</span>
+        <div id="ratioLabel">Full</div>
+    </div>
+    <div class="top-icon-btn" id="gridBtn" onclick="toggleGrid()">
+        <span class="material-symbols-outlined">grid_on</span>
+        <div>Grid</div>
+    </div>
 </div>
 
-<div id="countdown-display"></div>
-
 <div class="viewport-container">
+    <div id="countdown-display"></div>
     <div class="viewport ratio-full" id="viewport">
         <video id="videoFeed" autoplay playsinline muted></video>
         <div class="zoom-pill">
-            <div class="zoom-dot" onclick="applyZoom(0.5)">.5</div>
-            <div class="zoom-dot active" id="z1" onclick="applyZoom(1)">1x</div>
-            <div class="zoom-dot" onclick="applyZoom(2)">2</div>
-            <div class="zoom-dot" onclick="applyZoom(5)">5</div>
+            <div class="zoom-dot" onclick="applyZoom(0.5, this)">.5</div>
+            <div class="zoom-dot active" onclick="applyZoom(1, this)">1x</div>
+            <div class="zoom-dot" onclick="applyZoom(2, this)">2</div>
+            <div class="zoom-dot" onclick="applyZoom(5, this)">5</div>
         </div>
     </div>
 </div>
@@ -79,8 +106,6 @@
             <div class="mode-item" onclick="setMode(0, 'video')">Video</div>
             <div class="mode-item active" onclick="setMode(1, 'photo')">Photo</div>
             <div class="mode-item" onclick="setMode(2, 'hdphoto')">HD Pro</div>
-            <div class="mode-item" onclick="setMode(3, 'short')">Short</div>
-            <div class="mode-item" onclick="setMode(4, 'slowmo')">Slowmo</div>
         </div>
     </div>
     <div class="shutter-row">
@@ -97,86 +122,78 @@
 
 <script>
 const video = document.getElementById('videoFeed');
-const modeTrack = document.getElementById('modeTrack');
 const shutter = document.getElementById('shutter');
-const countdownDisplay = document.getElementById('countdown-display');
+const viewport = document.getElementById('viewport');
 
-let currentMode = "photo", timerVal = 0, currentFacing = "environment";
+let timerVal = 0, flashOn = false, currentFacing = "environment";
 
 async function initCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: currentFacing, width: { ideal: 1920 }, height: { ideal: 1080 } } 
-        });
-        video.srcObject = stream;
-    } catch (err) { alert("Camera error: " + err); }
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: currentFacing, width: { ideal: 1920 }, height: { ideal: 1080 } } 
+    });
+    video.srcObject = stream;
 }
 
-function setMode(idx, mode) {
-    currentMode = mode;
-    const items = document.querySelectorAll('.mode-item');
-    items.forEach((item, i) => item.classList.toggle('active', i === idx));
-    const container = document.querySelector('.mode-container');
-    const activeItem = items[idx];
-    const offset = (container.offsetWidth / 2) - (activeItem.offsetLeft + activeItem.offsetWidth / 2);
-    modeTrack.style.left = '0px'; 
-    modeTrack.style.transform = `translate(${offset}px, -50%)`;
+// Fixed Grid Function
+function toggleGrid() {
+    viewport.classList.toggle('grid-active');
+    document.getElementById('gridBtn').classList.toggle('active');
+}
+
+// Fixed Flash Function
+function toggleFlash() {
+    flashOn = !flashOn;
+    const icon = document.getElementById('flashIcon');
+    icon.innerText = flashOn ? 'flash_on' : 'flash_off';
+    document.querySelector('.top-icon-btn').classList.toggle('active', flashOn);
+}
+
+// Fixed Timer Function
+function toggleTimer() {
+    const sequence = [0, 3, 10];
+    timerVal = sequence[(sequence.indexOf(timerVal) + 1) % sequence.length];
+    document.getElementById('timerLabel').innerText = timerVal === 0 ? 'Off' : timerVal + 's';
+    document.getElementById('timerIcon').innerText = timerVal === 0 ? 'timer_off' : `timer_${timerVal}`;
+}
+
+function applyZoom(v, el) {
+    video.style.transform = `scale(${v})`;
+    document.querySelectorAll('.zoom-dot').forEach(d => d.classList.remove('active'));
+    el.classList.add('active');
 }
 
 function capture() {
     const canvas = document.getElementById('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
-    
-    const data = canvas.toDataURL('image/jpeg', 0.7); // 0.7 quality saves space
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const data = canvas.toDataURL('image/jpeg', 0.8);
 
-    // Save to LocalStorage
     let gallery = JSON.parse(localStorage.getItem('camera_gallery') || '[]');
-    gallery.unshift({ type: 'image', data: data, date: Date.now() });
-    
-    try {
-        localStorage.setItem('camera_gallery', JSON.stringify(gallery));
-    } catch(e) {
-        alert("Storage full! Please clear some photos in the gallery.");
-    }
+    gallery.unshift({ type: 'image', data: data });
+    localStorage.setItem('camera_gallery', JSON.stringify(gallery));
 
-    // Update Thumbnail
-    updateThumbnail(data);
-    
-    // Flash effect
-    document.body.style.backgroundColor = 'white';
-    setTimeout(() => document.body.style.backgroundColor = 'black', 40);
-}
+    document.getElementById('thumbImg').src = data;
+    document.getElementById('thumbImg').style.display = 'block';
+    document.getElementById('galleryIcon').style.display = 'none';
 
-function updateThumbnail(src) {
-    const thumb = document.getElementById('thumbImg');
-    const icon = document.getElementById('galleryIcon');
-    if(src) {
-        thumb.src = src;
-        thumb.style.display = 'block';
-        icon.style.display = 'none';
-    }
-}
-
-function toggleTimer() {
-    const sequence = [0, 3, 5, 10];
-    timerVal = sequence[(sequence.indexOf(timerVal) + 1) % sequence.length];
-    document.getElementById('timerLabel').innerText = timerVal === 0 ? 'Off' : timerVal + 's';
+    // UI Flash
+    document.body.style.background = 'white';
+    setTimeout(() => document.body.style.background = 'black', 50);
 }
 
 shutter.onclick = () => {
     if (timerVal > 0) {
         let count = timerVal;
-        countdownDisplay.style.display = 'block';
-        countdownDisplay.innerText = count;
-        const timer = setInterval(() => {
+        const display = document.getElementById('countdown-display');
+        display.style.display = 'block';
+        display.innerText = count;
+        const t = setInterval(() => {
             count--;
-            if (count <= 0) { clearInterval(timer); countdownDisplay.style.display = 'none'; capture(); }
-            else { countdownDisplay.innerText = count; }
+            if (count <= 0) { clearInterval(t); display.style.display = 'none'; capture(); }
+            else display.innerText = count;
         }, 1000);
-    } else { capture(); }
+    } else capture();
 };
 
 function toggleCamera() {
@@ -185,25 +202,21 @@ function toggleCamera() {
 }
 
 function toggleRatio() {
-    const vp = document.getElementById('viewport');
     const label = document.getElementById('ratioLabel');
-    if (vp.classList.contains('ratio-full')) { vp.classList.replace('ratio-full', 'ratio-4-3'); label.innerText = '4:3'; }
-    else if (vp.classList.contains('ratio-4-3')) { vp.classList.replace('ratio-4-3', 'ratio-16-9'); label.innerText = '16:9'; }
-    else { vp.classList.replace('ratio-16-9', 'ratio-full'); label.innerText = 'Full'; }
-}
-
-function applyZoom(v) {
-    video.style.transform = `translate(-50%, -50%) scale(${v})`;
-    document.querySelectorAll('.zoom-dot').forEach(d => d.classList.toggle('active', d.innerText.includes(v)));
+    if (viewport.classList.contains('ratio-full')) { viewport.className = 'viewport ratio-4-3'; label.innerText = '4:3'; }
+    else if (viewport.classList.contains('ratio-4-3')) { viewport.className = 'viewport ratio-16-9'; label.innerText = '16:9'; }
+    else { viewport.className = 'viewport ratio-full'; label.innerText = 'Full'; }
 }
 
 window.onload = () => { 
-    initCamera();
-    setMode(1, 'photo'); 
-    // Load last photo into thumb
+    initCamera(); 
     const gallery = JSON.parse(localStorage.getItem('camera_gallery') || '[]');
-    if(gallery.length > 0) updateThumbnail(gallery[0].data);
+    if(gallery.length > 0) {
+        document.getElementById('thumbImg').src = gallery[0].data;
+        document.getElementById('thumbImg').style.display = 'block';
+        document.getElementById('galleryIcon').style.display = 'none';
+    }
 };
 </script>
 </body>
-        </html>
+                                                                          </html>
